@@ -4,21 +4,15 @@ import {
   KeyRound,
   Search,
   Wand2,
-  Lock,
   FolderLock,
   ArrowRight,
-  CheckCircle2,
-  Users,
   GraduationCap,
   Briefcase,
   Laptop,
   ShoppingBag,
   Building2,
   Globe,
-  Puzzle,
-  Sparkles,
-  CreditCard,
-  Zap,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -27,17 +21,17 @@ export default function LandingPage() {
   const targetUsers = [
     {
       title: "Students",
-      description: "Keep academic portals, LMS logins, research tools, and student email accounts organized in one place.",
+      description: "Keep university portals, LMS logins, research tools, and student emails organized in one central vault.",
       icon: GraduationCap,
     },
     {
       title: "Employees & Professionals",
-      description: "Separate work credentials, enterprise platforms, and internal tools from your personal accounts.",
+      description: "Separate work credentials, corporate tools, and internal accounts from personal logins.",
       icon: Briefcase,
     },
     {
       title: "Freelancers",
-      description: "Manage client logins, SaaS dashboards, invoicing platforms, and freelance job accounts securely.",
+      description: "Manage client dashboards, SaaS subscriptions, invoicing platforms, and freelance tools safely.",
       icon: Laptop,
     },
     {
@@ -47,7 +41,7 @@ export default function LandingPage() {
     },
     {
       title: "Small Business Owners",
-      description: "Maintain control over business services, banking portals, and vendor login credentials.",
+      description: "Maintain control over business services, merchant portals, and vendor login credentials.",
       icon: Building2,
     },
     {
@@ -59,24 +53,24 @@ export default function LandingPage() {
 
   const features = [
     {
-      title: "Organized Password Vault",
-      description: "Store your website credentials, categorize them into Work, Social, Shopping, Finance, or Education, and add private notes.",
+      title: "Password Vault (CRUD)",
+      description: "Store website credentials with Website Name, URL, Category, Username/Email, Password, and Optional Notes.",
       icon: FolderLock,
     },
     {
-      title: "PassVault Browser Extension",
-      description: "Automatically detect login forms on visited sites, prompt to save on submit, and autofill credentials in Chrome, Edge & Firefox.",
-      icon: Puzzle,
+      title: "Fast Real-Time Search",
+      description: "Search saved credentials by Website/App Name and Username/Email with instant query matching.",
+      icon: Search,
     },
     {
-      title: "Cryptographic Generator",
-      description: "Generate high-entropy, cryptographically strong passwords tailored with custom lengths and character sets.",
+      title: "Cryptographic Password Generator",
+      description: "Generate high-entropy passwords with custom length and character set options using CSPRNG.",
       icon: Wand2,
     },
     {
-      title: "Vault Auto-Lock & Session Security",
-      description: "Configurable inactivity auto-lock and manual instant lock to protect your credentials from unauthorized physical access.",
-      icon: Lock,
+      title: "Masked Passwords & One-Click Copy",
+      description: "Passwords are hidden by default everywhere. Use Show/Hide toggles and instant one-click copy.",
+      icon: KeyRound,
     },
   ];
 
@@ -101,13 +95,9 @@ export default function LandingPage() {
 
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
             <a href="#features" className="hover:text-electric-400 transition-colors">Features</a>
-            <Link href="/extension" className="hover:text-electric-400 transition-colors flex items-center gap-1">
-              <span>Extension</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-electric-600/30 text-electric-300 font-bold">New</span>
-            </Link>
-            <Link href="/subscription" className="hover:text-electric-400 transition-colors">Pricing</Link>
             <a href="#problem" className="hover:text-electric-400 transition-colors">The Problem</a>
-            <a href="#target-users" className="hover:text-electric-400 transition-colors">For Who</a>
+            <a href="#target-users" className="hover:text-electric-400 transition-colors">Target Users</a>
+            <a href="#how-it-works" className="hover:text-electric-400 transition-colors">How It Works</a>
           </nav>
 
           <div className="flex items-center space-x-3">
@@ -118,7 +108,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/signup">
               <Button variant="primary" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Start Free Trial
+                Create Account
               </Button>
             </Link>
           </div>
@@ -131,8 +121,8 @@ export default function LandingPage() {
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10 space-y-8">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-charcoal-900/90 border border-electric-500/30 text-xs font-semibold text-electric-400 shadow-glow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>PassVault Phase 2 — 30-Day Free Trial & Browser Extension</span>
+            <Shield className="w-3.5 h-3.5 text-electric-400" />
+            <span>PassVault MVP — Core Password Management Solution</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
@@ -143,13 +133,13 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            The average user manages over 100 online accounts. PassVault provides a clean, user-friendly digital solution to store, find, and generate strong passwords in one protected place — with full browser extension autofill.
+            The average user manages over 100 online accounts. PassVault provides one secure, user-friendly place to safely store, find, copy, and generate strong passwords.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/signup" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto px-8" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                Start 30-Day Free Trial
+                Get Started
               </Button>
             </Link>
             <Link href="/dashboard" className="w-full sm:w-auto">
@@ -159,23 +149,23 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Quick Metrics */}
+          {/* Core MVP Metrics */}
           <div className="pt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-charcoal-800/80">
             <div>
-              <p className="text-2xl font-bold text-white">30 Days</p>
-              <p className="text-xs text-slate-400 mt-0.5">Free Full Trial</p>
+              <p className="text-2xl font-bold text-white">100%</p>
+              <p className="text-xs text-slate-400 mt-0.5">Masked by Default</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-electric-400">Autofill</p>
-              <p className="text-xs text-slate-400 mt-0.5">Browser Extension</p>
+              <p className="text-2xl font-bold text-electric-400">Zero</p>
+              <p className="text-xs text-slate-400 mt-0.5">Plaintext Display</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-400">Auto-Lock</p>
-              <p className="text-xs text-slate-400 mt-0.5">Session Security</p>
+              <p className="text-2xl font-bold text-white">6 Types</p>
+              <p className="text-xs text-slate-400 mt-0.5">Category Filters</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-400">CSPRNG</p>
-              <p className="text-xs text-slate-400 mt-0.5">Cryptographic RNG</p>
+              <p className="text-xs text-slate-400 mt-0.5">Web Crypto Engine</p>
             </div>
           </div>
         </div>
@@ -189,10 +179,10 @@ export default function LandingPage() {
               The Reality
             </h2>
             <p className="text-3xl font-bold text-white">
-              Why Password Security is Broken For Everyday Users
+              Why Password Management Needs a Dedicated Solution
             </p>
             <p className="text-sm text-slate-400">
-              Memorizing dozens of complex passwords is humanly impossible. Traditional workarounds expose users to severe risk.
+              Memorizing dozens of complex passwords is impossible. Insecure notes and repeated passwords expose users to credential stuffing and data theft.
             </p>
           </div>
 
@@ -200,21 +190,21 @@ export default function LandingPage() {
             <Card className="space-y-3 border-red-500/20 bg-midnight-950/60">
               <div className="text-red-400 font-bold text-lg">Password Reuse</div>
               <p className="text-sm text-slate-300">
-                Using the same password across social media, shopping, and work means one compromised site compromises all accounts.
+                Reusing the same password across social media, shopping, and work means a single compromised website exposes all other accounts.
               </p>
             </Card>
 
             <Card className="space-y-3 border-amber-500/20 bg-midnight-950/60">
-              <div className="text-amber-400 font-bold text-lg">Unsecured Notes & Sheets</div>
+              <div className="text-amber-400 font-bold text-lg">Scattered Notes & Sheets</div>
               <p className="text-sm text-slate-300">
-                Writing credentials in notebooks, unencrypted documents, or mobile notes leaves them vulnerable to theft and snooping.
+                Writing credentials in unencrypted text files, spreadsheets, or notebooks leaves sensitive passwords unprotected.
               </p>
             </Card>
 
             <Card className="space-y-3 border-blue-500/20 bg-midnight-950/60">
-              <div className="text-electric-400 font-bold text-lg">Complex, Overloaded Tools</div>
+              <div className="text-electric-400 font-bold text-lg">Memory Burden & Resets</div>
               <p className="text-sm text-slate-300">
-                Traditional password software is often cluttered and confusing for non-technical users. PassVault keeps it simple and direct.
+                Constant password-reset cycles waste valuable time and interrupt your daily productivity.
               </p>
             </Card>
           </div>
@@ -229,10 +219,10 @@ export default function LandingPage() {
               Target Audience
             </h2>
             <p className="text-3xl font-bold text-white">
-              Designed For Real-World Internet Users
+              Built for Everyday Internet Users
             </p>
             <p className="text-sm text-slate-400">
-              Whether studying, freelancing, or managing a household, PassVault fits your daily digital workflow.
+              PassVault is designed to be accessible, intuitive, and secure for non-technical users and professionals alike.
             </p>
           </div>
 
@@ -253,18 +243,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Core Features Section */}
       <section id="features" className="py-20 bg-charcoal-900/40 border-y border-charcoal-800/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
             <h2 className="text-xs font-bold tracking-widest text-electric-400 uppercase">
-              Core Capabilities
+              MVP Capabilities
             </h2>
             <p className="text-3xl font-bold text-white">
-              Everything You Need in a Password Manager
+              Core Password Management Workflow
             </p>
             <p className="text-sm text-slate-400">
-              Streamlined features that empower you to take complete control of your digital credentials.
+              Essential, high-reliability features designed to solve the password problem completely.
             </p>
           </div>
 
@@ -292,10 +282,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-12">
           <div className="space-y-3">
             <h2 className="text-xs font-bold tracking-widest text-electric-400 uppercase">
-              Simple Workflow
+              Core Journey
             </h2>
             <p className="text-3xl font-bold text-white">
-              Detect → Review → Save → Search → Autofill → Manage
+              Save → Search → View/Copy → Generate → Manage
             </p>
           </div>
 
@@ -304,9 +294,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 mx-auto rounded-2xl bg-charcoal-800 border border-charcoal-700 flex items-center justify-center font-bold text-electric-400 text-lg">
                 1
               </div>
-              <h4 className="font-semibold text-white">Detect & Save</h4>
+              <h4 className="font-semibold text-white">Add Your Account</h4>
               <p className="text-xs text-slate-400">
-                Input credentials or let the extension detect login forms automatically on submission.
+                Input your website details or let PassVault generate a strong random password.
               </p>
             </div>
 
@@ -324,9 +314,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 mx-auto rounded-2xl bg-charcoal-800 border border-charcoal-700 flex items-center justify-center font-bold text-electric-400 text-lg">
                 3
               </div>
-              <h4 className="font-semibold text-white">Autofill & Lock</h4>
+              <h4 className="font-semibold text-white">View & Copy</h4>
               <p className="text-xs text-slate-400">
-                One-click autofill enters logins instantly, while auto-lock protects your vault.
+                One-click copy sends credentials to your clipboard with immediate confirmation.
               </p>
             </div>
           </div>
@@ -346,18 +336,15 @@ export default function LandingPage() {
           </div>
 
           <p className="text-xs text-slate-400 text-center md:text-left">
-            PassVault — Secure Password Manager. Built for high reliability and privacy.
+            PassVault — Secure Password Manager MVP. Built for high reliability and privacy.
           </p>
 
           <div className="flex items-center space-x-4">
             <Link href="/login" className="text-xs text-slate-400 hover:text-white transition-colors">
               Sign In
             </Link>
-            <Link href="/subscription" className="text-xs text-slate-400 hover:text-white transition-colors">
-              Pricing & Plans
-            </Link>
             <Link href="/signup" className="text-xs text-electric-400 hover:text-electric-300 font-semibold transition-colors">
-              Start Free Trial
+              Create Account
             </Link>
           </div>
         </div>

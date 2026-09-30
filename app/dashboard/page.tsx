@@ -7,26 +7,18 @@ import {
   Plus,
   Wand2,
   ShieldCheck,
-  Search,
   ArrowRight,
   TrendingUp,
-  AlertTriangle,
   KeyRound,
-  ExternalLink,
-  Sparkles,
-  Puzzle,
-  Lock,
-  CreditCard,
 } from "lucide-react";
 import { useVault } from "@/lib/vault-context";
 import { AppLayout } from "@/components/navigation/AppLayout";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CredentialCard } from "@/components/vault/CredentialCard";
-import { Badge } from "@/components/ui/Badge";
 
 export default function DashboardPage() {
-  const { profile, credentials, subscription, lockVault } = useVault();
+  const { profile, credentials } = useVault();
 
   // Category counts
   const workCount = credentials.filter((c) => c.category === "Work").length;
@@ -63,30 +55,6 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
-
-        {/* Phase 2: Subscription Free Trial Banner */}
-        {subscription.plan === "free_trial" && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-charcoal-900 to-charcoal-900 border border-amber-500/30">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  30-Day Free Trial: <span className="text-amber-300">{subscription.trialDaysLeft} days remaining</span>
-                </p>
-                <p className="text-xs text-slate-400">
-                  Enjoy unlimited vault storage, cryptographic generation, and browser extension access.
-                </p>
-              </div>
-            </div>
-            <Link href="/subscription" className="flex-shrink-0">
-              <Button variant="secondary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                View Plans & Upgrade
-              </Button>
-            </Link>
-          </div>
-        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -131,53 +99,25 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Phase 2: Browser Extension & Security Reminders */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="border-electric-500/20 bg-charcoal-900/60 p-5 flex flex-col justify-between gap-4">
-            <div className="flex items-start space-x-3.5">
-              <div className="p-2.5 rounded-xl bg-electric-600/15 text-electric-400 border border-electric-500/30 flex-shrink-0 mt-0.5">
-                <Puzzle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-white">PassVault Browser Extension</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Detect login fields, save credentials on submit, and autofill accounts automatically in Chrome, Edge, and Firefox.
-                </p>
-              </div>
+        {/* Security Reminders / Core Hygiene Banner */}
+        <Card className="border-electric-500/20 bg-charcoal-900/60 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start space-x-3.5">
+            <div className="p-2.5 rounded-xl bg-electric-600/10 text-electric-400 border border-electric-500/30 flex-shrink-0 mt-0.5">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <div className="flex justify-end">
-              <Link href="/extension">
-                <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                  Explore Extension & Simulator
-                </Button>
-              </Link>
+            <div className="space-y-1">
+              <h4 className="text-sm font-semibold text-white">Security Hygiene Reminder</h4>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+                Always avoid reusing passwords across multiple websites. Generate unique, high-entropy passwords with the PassVault Generator.
+              </p>
             </div>
-          </Card>
-
-          <Card className="border-electric-500/20 bg-charcoal-900/60 p-5 flex flex-col justify-between gap-4">
-            <div className="flex items-start space-x-3.5">
-              <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex-shrink-0 mt-0.5">
-                <Lock className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-semibold text-white">Session Security & Vault Lock</h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Keep your vault locked when stepping away from your computer. Unlock anytime with your Master Password.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Lock className="w-3.5 h-3.5 text-amber-400" />}
-                onClick={lockVault}
-              >
-                Lock Vault Now
-              </Button>
-            </div>
-          </Card>
-        </div>
+          </div>
+          <Link href="/generator" className="flex-shrink-0">
+            <Button variant="outline" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+              Open Generator
+            </Button>
+          </Link>
+        </Card>
 
         {/* Recently Added Section */}
         <div className="space-y-4">

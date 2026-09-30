@@ -2,19 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   Settings,
   Shield,
   Key,
   LogOut,
-  CheckCircle2,
   Lock,
-  Clock,
-  CreditCard,
-  Sparkles,
-  Puzzle,
-  ArrowRight,
 } from "lucide-react";
 import { useVault } from "@/lib/vault-context";
 import { AppLayout } from "@/components/navigation/AppLayout";
@@ -32,7 +25,6 @@ export default function SecuritySettingsPage() {
     lockVault,
     autoLockTimeout,
     setAutoLockTimeout,
-    subscription,
     showToast,
   } = useVault();
 
@@ -97,58 +89,9 @@ export default function SecuritySettingsPage() {
             <span>Security & Session Settings</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Configure your master password, automatic session lock, browser extension, and subscription settings.
+            Configure your master password and automatic session lock preferences.
           </p>
         </div>
-
-        {/* Phase 2: Session Lock & Auto-Lock Card */}
-        <Card className="space-y-5 border-electric-500/20">
-          <div className="flex items-center space-x-3 pb-3 border-b border-charcoal-800">
-            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white">Session Security & Vault Auto-Lock</h2>
-              <p className="text-xs text-slate-400">
-                Automatically lock your vault when inactive to protect credentials from shoulder surfing.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="w-full space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Auto-Lock Timeout
-              </label>
-              <select
-                value={autoLockTimeout}
-                onChange={(e) => setAutoLockTimeout(parseInt(e.target.value, 10) as AutoLockTimeout)}
-                className="w-full rounded-xl bg-charcoal-900 border border-charcoal-700 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-electric-500 focus:ring-1 focus:ring-electric-500 transition-colors"
-              >
-                {timeoutOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-midnight-950 text-white">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-midnight-950 border border-charcoal-800">
-              <div>
-                <p className="text-xs font-semibold text-white">Manual Instant Lock</p>
-                <p className="text-[11px] text-slate-400">Lock your vault immediately on demand.</p>
-              </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Lock className="w-3.5 h-3.5 text-amber-400" />}
-                onClick={lockVault}
-              >
-                Lock Vault Now
-              </Button>
-            </div>
-          </div>
-        </Card>
 
         {/* Change Master Password Card */}
         <Card className="space-y-6">
@@ -207,43 +150,52 @@ export default function SecuritySettingsPage() {
           </form>
         </Card>
 
-        {/* Phase 2: Subscription Quick Status Card */}
-        <Card className="space-y-4">
+        {/* Session Lock & Auto-Lock Card */}
+        <Card className="space-y-5 border-electric-500/20">
           <div className="flex items-center space-x-3 pb-3 border-b border-charcoal-800">
-            <div className="p-2 rounded-xl bg-electric-600/15 text-electric-400 border border-electric-500/30">
-              <CreditCard className="w-5 h-5" />
+            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-white">Subscription & Plan</h3>
-              <p className="text-xs text-slate-400">Current tier and billing cycle information.</p>
+              <h2 className="text-base font-bold text-white">Session Security & Vault Auto-Lock</h2>
+              <p className="text-xs text-slate-400">
+                Automatically lock your vault when inactive to protect credentials from unauthorized access.
+              </p>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-midnight-950 border border-charcoal-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-white flex items-center gap-2">
-                <span>
-                  {subscription.plan === "annual_pro"
-                    ? "Annual Pro Plan"
-                    : subscription.plan === "monthly_pro"
-                    ? "Monthly Pro Plan"
-                    : "30-Day Free Trial"}
-                </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase">
-                  {subscription.status === "active_trial" ? "Active Trial" : subscription.status === "active_subscription" ? "Active" : "Canceled"}
-                </span>
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {subscription.plan === "free_trial"
-                  ? `${subscription.trialDaysLeft} days remaining in trial`
-                  : `Billed ${subscription.price}`}
-              </p>
+          <div className="space-y-4">
+            <div className="w-full space-y-1.5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Auto-Lock Timeout
+              </label>
+              <select
+                value={autoLockTimeout}
+                onChange={(e) => setAutoLockTimeout(parseInt(e.target.value, 10) as AutoLockTimeout)}
+                className="w-full rounded-xl bg-charcoal-900 border border-charcoal-700 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-electric-500 focus:ring-1 focus:ring-electric-500 transition-colors"
+              >
+                {timeoutOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-midnight-950 text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
-            <Link href="/subscription">
-              <Button variant="secondary" size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                Manage Subscription
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-midnight-950 border border-charcoal-800">
+              <div>
+                <p className="text-xs font-semibold text-white">Manual Instant Lock</p>
+                <p className="text-[11px] text-slate-400">Lock your vault immediately on demand.</p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Lock className="w-3.5 h-3.5 text-amber-400" />}
+                onClick={lockVault}
+              >
+                Lock Vault Now
               </Button>
-            </Link>
+            </div>
           </div>
         </Card>
 

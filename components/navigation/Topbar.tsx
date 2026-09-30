@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Plus, Wand2, Lock, Sparkles, Puzzle } from "lucide-react";
+import { Search, Plus, Wand2 } from "lucide-react";
 import { useVault } from "@/lib/vault-context";
 import { Button } from "@/components/ui/Button";
 
 export function Topbar() {
   const router = useRouter();
-  const { searchQuery, setSearchQuery, lockVault, subscription } = useVault();
+  const { searchQuery, setSearchQuery } = useVault();
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -35,34 +35,13 @@ export function Topbar() {
         />
       </form>
 
-      {/* Quick Actions & Subscription Status */}
+      {/* Core MVP Actions */}
       <div className="flex items-center space-x-3">
-        {subscription.plan === "free_trial" && (
-          <Link
-            href="/subscription"
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/20 transition-colors"
-            title="Manage subscription"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Trial: {subscription.trialDaysLeft} days left</span>
-          </Link>
-        )}
-
-        <button
-          type="button"
-          onClick={lockVault}
-          className="p-2 text-slate-400 hover:text-amber-400 rounded-xl hover:bg-charcoal-800 border border-charcoal-700/70 transition-colors"
-          title="Lock Vault Immediately"
-        >
-          <Lock className="w-4 h-4" />
-        </button>
-
-        <Link href="/extension">
-          <Button variant="secondary" size="sm" leftIcon={<Puzzle className="w-4 h-4 text-electric-400" />}>
-            Extension
+        <Link href="/generator">
+          <Button variant="secondary" size="sm" leftIcon={<Wand2 className="w-4 h-4 text-electric-400" />}>
+            Generator
           </Button>
         </Link>
-
         <Link href="/vault/new">
           <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />}>
             Add Credential
