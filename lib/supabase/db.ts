@@ -103,7 +103,6 @@ export async function dbGetCredentials(userId: string): Promise<Credential[]> {
       return [];
     }
 
-    // Decrypt passwords via server route or format for UI
     const creds: Credential[] = (data || []).map((row) => ({
       id: row.id,
       user_id: row.user_id,
@@ -111,7 +110,7 @@ export async function dbGetCredentials(userId: string): Promise<Credential[]> {
       website_url: row.website_url || "",
       category: (row.category as Category) || "Other",
       username_email: row.username_email,
-      password: row.encrypted_password, // encrypted cipher string
+      password: row.encrypted_password,
       notes: row.notes || "",
       created_at: row.created_at,
       updated_at: row.updated_at,
@@ -120,6 +119,54 @@ export async function dbGetCredentials(userId: string): Promise<Credential[]> {
     return creds;
   } catch (err) {
     console.error("dbGetCredentials exception:", err);
+    return [];
+  }
+}
+
+export async function dbSearchCredentials(
+  userId: string,
+  searchQuery?: string,
+  category?: Category | "All"
+): Promise<Credential[]> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return [];
+
+  try {
+    let query = supabase
+      .from("credentials")
+      .select("*")
+      .eq("user_id", userId);
+
+    if (category && category !== "All") {
+      query = query.eq("category", category);
+    }
+
+    if (searchQuery && searchQuery.trim()) {
+      const clean = searchQuery.trim();
+      query = query.or(`website_name.ilike.%${clean}%,username_email.ilike.%${clean}%,website_url.ilike.%${clean}%`);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("dbSearchCredentials error:", error.message);
+      return [];
+    }
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      user_id: row.user_id,
+      website_name: row.website_name,
+      website_url: row.website_url || "",
+      category: (row.category as Category) || "Other",
+      username_email: row.username_email,
+      password: row.encrypted_password,
+      notes: row.notes || "",
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+  } catch (err) {
+    console.error("dbSearchCredentials exception:", err);
     return [];
   }
 }
