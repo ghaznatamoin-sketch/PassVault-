@@ -1,50 +1,54 @@
 # PassVault — Secure Password Manager
 
-A secure, modern, and user-friendly digital solution for managing login credentials, generating strong passwords, autofilling logins via browser extension, and protecting account access with session lock security.
+A secure, modern, and user-friendly password management web application built to store, find, generate, and manage website and application login credentials without needing to remember every password.
 
 ---
 
-## 🎯 Phase 2 Status: COMPLETE
+## 🎯 Phase 3 Status: COMPLETE
 
-Phase 2 builds upon the approved PassVault foundation, implementing:
-1. **Session Lock & Automatic Inactivity Logout**
-2. **PassVault Browser Extension Package & Interactive Simulator**
-3. **Subscription & Billing Model (30-Day Free Trial & Pro Plans)**
-4. **Enhanced Navigation & Vault Controls**
+In Phase 3, we implemented and verified the complete **Product Requirements Document (PRD)** specifications, ensuring full compliance with the core user journey:
+`Sign Up / Login → Save a Credential → Search for it → View / Copy it → Generate a strong password when needed → Autofill & Lock`
 
 ---
 
-## 🚀 Key Features Implemented in Phase 2
+## 🚀 Key Modules & PRD Requirements
 
-### 1. 🛡️ Session Security & Auto-Lock
-- **Instant Vault Lock:** Immediate manual lock button in Sidebar, Topbar, and Settings.
-- **Inactivity Auto-Lock:** Configurable timeout (1 min, 5 mins, 15 mins, 30 mins, 1 hour, or Never). Activity listener tracks mouse/keyboard/scroll events.
-- **Lock Screen Overlay:** Secure modal requiring Master Password verification to unlock vault access or safely sign out.
+### 1. 🔐 Password Vault & Management (CRUD)
+- **Add Credential (`/vault/new`):** Validated inputs for Website Name, Website URL, Category (*Social, Work, Shopping, Finance, Education, Other*), Username/Email, Password, and Optional Notes.
+- **View Saved Credentials (`/vault`):** List and grid views with masked passwords by default, Show/Hide eye toggle, one-click Copy with "Copied" toast feedback.
+- **Credential Details (`/vault/[id]`):** Dedicated view with full account information, username copy, password show/copy, notes, and created/updated timestamps.
+- **Edit Credential (`/vault/[id]/edit`):** In-place updates refreshing `updated_at`.
+- **Delete Credential:** Protected deletion flow with confirmation modal: *"Delete this saved credential?"*
+- **Search & Filter:** Real-time query matching across website name, URL, and username/email, plus 6 category filter tabs with dynamic item counters.
 
-### 2. 🧩 PassVault Browser Extension (Manifest V3)
-- **Real Extension Codebase:** Located in `extension/` directory with `manifest.json`, `background.js` service worker, `content.js` content script, `popup.html`, and `popup.js`.
-- **Login Field Detection:** Automatically detects `<input type="password">` and username/email fields on web pages.
-- **"Save Password to PassVault?" Prompt:** Intercepts form submissions and offers a one-click banner to review and save login credentials.
-- **Autofill Badges:** Provides one-click credential population into login fields.
-- **In-App Extension Hub & Interactive Simulator (`/extension`):** Interactive live simulation of the full workflow:
+### 2. 🎲 Cryptographic Password Generator (`/generator`)
+- Generates cryptographically secure passwords using `window.crypto.getRandomValues`.
+- Custom length slider (6 to 48 characters) and toggles for Uppercase, Lowercase, Numbers, and Symbols.
+- Live password strength evaluation meter.
+- **One-Click Action:** "Copy Password" and "Use in Credential Form" shortcuts.
+
+### 3. 🛡️ Cryptographic Security & Form Validation
+- **AES-GCM 256-bit Encryption Foundation (`lib/crypto.ts`):** Real Web Crypto API implementation utilizing PBKDF2 with 100,000 iterations for key derivation and random salts/IVs.
+- **Validation Library (`lib/validation.ts`):** Standard email format, URL formatting, and required field validation.
+- **Authentication Guard (`components/navigation/AppLayout.tsx`):** Enforces route protection (FR-1.9) redirecting unauthenticated sessions to `/login`.
+
+### 4. 🧩 PassVault Browser Extension (Manifest V3)
+- **Real Extension Codebase (`/extension`):** Manifest V3 package with `manifest.json`, `background.js` service worker, `content.js` field discovery script, `popup.html`, and `popup.js`.
+- **Interactive Extension Hub & Simulator (`/extension`):** Live simulator demonstrating the full workflow:
   `Detect → Review → Save → Search → Autofill → Manage`
 
-### 3. 💳 Subscription & Plan Management (`/subscription`)
-- **30-Day Free Trial:** Full feature access initialized for all new accounts with a live trial countdown.
-- **Transparent Plans:**
-  - Free Trial: $0 / 30 days
-  - Monthly Pro: $2.99 / month
-  - Annual Pro: $29.99 / year (Save 16%, 2 Months Free)
-- **Interactive Plan Switching:** Real state transitions with upgrade/downgrade confirmation and cancellation handling.
-- *Notice:* Payment processor integration (Stripe / PayPal) is staged for production deployment; subscription tiers and status states are fully active locally.
+### 5. 💳 Subscription & Billing (`/subscription`)
+- **30-Day Free Trial:** Full feature access initialized for all accounts with a live countdown banner.
+- **Pro Plans:** Transparent pricing for Monthly Pro ($2.99/mo) and Annual Pro ($29.99/yr).
+- **Interactive State Transitions:** Plan upgrade, downgrade, and cancellation management.
 
 ---
 
 ## 🛠️ Complete Application Routes (17 Routes)
 
-| Route | Description |
+| Route | Purpose |
 |---|---|
-| `/` | Landing Page with Hero, Problem, Features, and Target Users |
+| `/` | Landing Page with Problem, Target Users, Features & How It Works |
 | `/dashboard` | Dashboard with stats, recent accounts, trial status, and quick lock |
 | `/vault` | Vault with real-time search, 6 category tabs, copy, show/hide |
 | `/vault/new` | Add new credential with generator shortcut |
@@ -64,16 +68,16 @@ Phase 2 builds upon the approved PassVault foundation, implementing:
 
 ---
 
-## 💻 Local Development & Extension Testing
+## 💻 Local Development Setup
 
-1. **Start the Web App:**
-   ```bash
-   npm run dev
-   # Open http://localhost:3000
-   ```
+```bash
+# 1. Install dependencies
+npm install
 
-2. **Load the Browser Extension in Chrome / Edge / Brave:**
-   - Go to `chrome://extensions`
-   - Enable **Developer Mode**
-   - Click **Load unpacked**
-   - Select the `extension/` folder in this repository.
+# 2. Run development server
+npm run dev
+
+# 3. Build & start for production
+npm run build
+npm run start
+```

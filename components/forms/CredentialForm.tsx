@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { validateCredentialForm } from "@/lib/validation";
 
 interface CredentialFormProps {
   initialData?: Partial<Credential>;
@@ -46,24 +47,20 @@ export function CredentialForm({ initialData, isEditing = false }: CredentialFor
     }
   }, [activeGeneratedPassword, initialData, setActiveGeneratedPassword]);
 
-  const validate = () => {
-    const errs: Record<string, string> = {};
-    if (!websiteName.trim()) {
-      errs.websiteName = "Website or Application name is required.";
-    }
-    if (!usernameEmail.trim()) {
-      errs.usernameEmail = "Username or Email is required.";
-    }
-    if (!password) {
-      errs.password = "Password is required.";
-    }
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    const validation = validateCredentialForm({
+      website_name: websiteName,
+      website_url: websiteUrl,
+      username_email: usernameEmail,
+      password: password,
+    });
+
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+    setErrors({});
 
     setIsLoading(true);
 
@@ -116,7 +113,7 @@ export function CredentialForm({ initialData, isEditing = false }: CredentialFor
           placeholder="e.g. Google Workspace, Amazon, GitHub"
           value={websiteName}
           onChange={(e) => setWebsiteName(e.target.value)}
-          error={errors.websiteName}
+          error={errors.website_name}
           required
           leftIcon={<Globe className="w-4 h-4" />}
         />
@@ -128,6 +125,7 @@ export function CredentialForm({ initialData, isEditing = false }: CredentialFor
             placeholder="https://example.com"
             value={websiteUrl}
             onChange={(e) => setWebsiteUrl(e.target.value)}
+            error={errors.website_url}
             helperText="e.g. https://github.com/login"
           />
 
@@ -155,7 +153,7 @@ export function CredentialForm({ initialData, isEditing = false }: CredentialFor
           placeholder="user@example.com or @handle"
           value={usernameEmail}
           onChange={(e) => setUsernameEmail(e.target.value)}
-          error={errors.usernameEmail}
+          error={errors.username_email}
           required
           leftIcon={<User className="w-4 h-4" />}
         />
