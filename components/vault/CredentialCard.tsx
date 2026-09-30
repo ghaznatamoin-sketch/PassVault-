@@ -14,16 +14,36 @@ interface CredentialCardProps {
 }
 
 export function CredentialCard({ credential }: CredentialCardProps) {
-  const { deleteCredential } = useVault();
+  const { deleteCredential, decryptCredentialPassword, showToast } = useVault();
   const [showPassword, setShowPassword] = useState(false);
+  const [plainPassword, setPlainPassword] = useState("");
   const [copied, setCopied] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleToggleShow = async () => {
+    if (!showPassword) {
+      if (credential.password.startsWith("v1:")) {
+        const decrypted = await decryptCredentialPassword(credential.id);
+        setPlainPassword(decrypted);
+      } else {
+        setPlainPassword(credential.password);
+      }
+      setShowPassword(true);
+    } else {
+      setShowPassword(false);
+    }
+  };
+
   const handleCopyPassword = async () => {
-    const ok = await copyToClipboard(credential.password);
+    let textToCopy = credential.password;
+    if (credential.password.startsWith("v1:")) {
+      textToCopy = plainPassword || (await decryptCredentialPassword(credential.id));
+    }
+    const ok = await copyToClipboard(textToCopy);
     if (ok) {
       setCopied(true);
+      showToast("Password copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -89,12 +109,12 @@ export function CredentialCard({ credential }: CredentialCardProps) {
             </div>
             <div className="flex items-center justify-between mt-1">
               <span className="font-mono text-sm tracking-wider text-slate-100 select-all truncate max-w-[180px]">
-                {showPassword ? credential.password : "••••••••••••••••"}
+                {showPassword ? (plainPassword || credential.password) : "••••••••••••••••"}
               </span>
               <div className="flex items-center space-x-1.5 ml-2">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={handleToggleShow}
                   title={showPassword ? "Hide password" : "Show password"}
                   className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-charcoal-700 transition-colors"
                 >

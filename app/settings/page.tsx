@@ -8,6 +8,9 @@ import {
   Key,
   LogOut,
   Lock,
+  Database,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { useVault } from "@/lib/vault-context";
 import { AppLayout } from "@/components/navigation/AppLayout";
@@ -26,6 +29,7 @@ export default function SecuritySettingsPage() {
     autoLockTimeout,
     setAutoLockTimeout,
     showToast,
+    isSupabaseActive,
   } = useVault();
 
   const [currentPassword, setCurrentPassword] = useState("");
@@ -195,6 +199,58 @@ export default function SecuritySettingsPage() {
               >
                 Lock Vault Now
               </Button>
+            </div>
+          </div>
+        </Card>
+
+        {/* Supabase Backend & PostgreSQL Database Status */}
+        <Card className="space-y-4 border-electric-500/20">
+          <div className="flex items-center space-x-3 pb-3 border-b border-charcoal-800">
+            <div className="p-2 rounded-xl bg-electric-600/15 text-electric-400 border border-electric-500/30">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white">Supabase PostgreSQL Backend</h3>
+              <p className="text-xs text-slate-400">Database architecture, authentication & Row Level Security (RLS).</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl bg-midnight-950 border border-charcoal-800 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">Database Engine</p>
+                <p className="text-xs text-slate-400 mt-0.5">PostgreSQL via Supabase Cloud Client</p>
+              </div>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${
+                isSupabaseActive
+                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                  : "bg-blue-500/15 text-blue-400 border-blue-500/30"
+              }`}>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {isSupabaseActive ? "Connected Live" : "Ready (Local & Schema Synchronized)"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3 rounded-xl bg-midnight-950 border border-charcoal-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Profiles Table</span>
+                <p className="text-xs text-slate-200">1:1 User Profile with RLS</p>
+              </div>
+              <div className="p-3 rounded-xl bg-midnight-950 border border-charcoal-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Credentials Table</span>
+                <p className="text-xs text-slate-200">1:N with AES-256-GCM Protection</p>
+              </div>
+              <div className="p-3 rounded-xl bg-midnight-950 border border-charcoal-800 space-y-1">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Generator Table</span>
+                <p className="text-xs text-slate-200">1:1 Per-User Preferences</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-midnight-950/70 border border-charcoal-800/80 text-xs text-slate-400 space-y-1">
+              <p className="font-semibold text-slate-300">Security Architecture:</p>
+              <p>• Row Level Security (RLS) strictly isolates records with <code className="text-electric-400 font-mono">auth.uid() = user_id</code>.</p>
+              <p>• Website passwords are protected with reversible AES-256-GCM encryption before database persistence.</p>
+              <p>• Zero private service-role keys or database credentials exposed to browser client.</p>
             </div>
           </div>
         </Card>

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
+import { supabaseResetPassword, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -24,6 +25,17 @@ export default function ForgotPasswordPage() {
     }
 
     setIsLoading(true);
+    if (isSupabaseConfigured()) {
+      const res = await supabaseResetPassword(email.trim());
+      setIsLoading(false);
+      if (res.success) {
+        setIsSubmitted(true);
+      } else {
+        setError(res.error || "Failed to send reset link.");
+      }
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 600));
     setIsLoading(false);
     setIsSubmitted(true);

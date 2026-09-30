@@ -29,10 +29,11 @@ import { copyToClipboard, formatDate } from "@/lib/utils";
 export default function CredentialDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const router = useRouter();
-  const { getCredentialById, deleteCredential, showToast } = useVault();
+  const { getCredentialById, deleteCredential, decryptCredentialPassword, showToast } = useVault();
 
   const credential = getCredentialById(unwrappedParams.id);
   const [showPassword, setShowPassword] = useState(false);
+  const [plainPassword, setPlainPassword] = useState("");
   const [copiedPass, setCopiedPass] = useState(false);
   const [copiedUser, setCopiedUser] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -54,8 +55,26 @@ export default function CredentialDetailsPage({ params }: { params: Promise<{ id
     );
   }
 
+  const handleToggleShow = async () => {
+    if (!showPassword) {
+      if (credential.password.startsWith("v1:")) {
+        const decrypted = await decryptCredentialPassword(credential.id);
+        setPlainPassword(decrypted);
+      } else {
+        setPlainPassword(credential.password);
+      }
+      setShowPassword(true);
+    } else {
+      setShowPassword(false);
+    }
+  };
+
   const handleCopyPassword = async () => {
-    const ok = await copyToClipboard(credential.password);
+    let textToCopy = credential.password;
+    if (credential.password.startsWith("v1:")) {
+      textToCopy = plainPassword || (await decryptCredentialPassword(credential.id));
+    }
+    const ok = await copyToClipboard(textToCopy);
     if (ok) {
       setCopiedPass(true);
       showToast("Password copied to clipboard", "success");
@@ -163,13 +182,13 @@ export default function CredentialDetailsPage({ params }: { params: Promise<{ id
                   Password
                 </span>
                 <p className="font-mono text-base text-white tracking-widest truncate select-all">
-                  {showPassword ? credential.password : "••••••••••••••••••••"}
+                  {showPassword ? (plainPassword || credential.password) : "••••••••••••••••••••"}
                 </p>
               </div>
               <div className="flex items-center space-x-1.5 flex-shrink-0">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={handleToggleShow}
                   className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-charcoal-800 transition-colors"
                   title={showPassword ? "Hide password" : "Show password"}
                 >

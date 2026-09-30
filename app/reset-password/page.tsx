@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { useVault } from "@/lib/vault-context";
+import { supabaseUpdatePassword, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -40,6 +41,18 @@ export default function ResetPasswordPage() {
     }
 
     setIsLoading(true);
+    if (isSupabaseConfigured()) {
+      const res = await supabaseUpdatePassword(password);
+      setIsLoading(false);
+      if (res.success) {
+        setIsSuccess(true);
+        showToast("Password updated successfully.", "success");
+      } else {
+        setError(res.error || "Password update failed.");
+      }
+      return;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 600));
     setIsLoading(false);
     setIsSuccess(true);

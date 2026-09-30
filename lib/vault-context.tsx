@@ -10,6 +10,26 @@ import {
   SubscriptionPlan,
   AutoLockTimeout,
 } from "./types";
+import {
+  getSupabaseClient,
+  isSupabaseConfigured,
+  supabaseSignIn,
+  supabaseSignUp,
+  supabaseSignInWithGoogle,
+  supabaseSignOut,
+  supabaseResetPassword,
+  supabaseUpdatePassword,
+} from "./supabase/client";
+import {
+  dbGetProfile,
+  dbUpdateProfile,
+  dbGetCredentials,
+  dbAddCredential,
+  dbUpdateCredential,
+  dbDeleteCredential,
+  dbGetGeneratorSettings,
+  dbSaveGeneratorSettings,
+} from "./supabase/db";
 
 interface VaultContextType {
   credentials: Credential[];
@@ -25,22 +45,25 @@ interface VaultContextType {
   updateCredential: (id: string, updates: Partial<Omit<Credential, "id" | "user_id" | "created_at">>) => Promise<{ success: boolean; error?: string }>;
   deleteCredential: (id: string) => Promise<{ success: boolean; error?: string }>;
   getCredentialById: (id: string) => Credential | undefined;
+  decryptCredentialPassword: (credentialId: string) => Promise<string>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
+  isSupabaseActive: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   toastMessage: { text: string; type: "success" | "error" | "warning" | "info" } | null;
   showToast: (text: string, type?: "success" | "error" | "warning" | "info") => void;
   activeGeneratedPassword: string | null;
   setActiveGeneratedPassword: (pass: string | null) => void;
-  // Phase 2: Session Lock & Auto Logout
+  // Session Lock
   isLocked: boolean;
   lockVault: () => void;
   unlockVault: (password: string) => Promise<{ success: boolean; error?: string }>;
   autoLockTimeout: AutoLockTimeout;
   setAutoLockTimeout: (timeout: AutoLockTimeout) => void;
-  // Phase 2: Subscription Management
+  // Subscription
   subscription: SubscriptionInfo;
   updateSubscriptionPlan: (plan: SubscriptionPlan) => Promise<{ success: boolean }>;
   cancelSubscription: () => Promise<{ success: boolean }>;
@@ -156,68 +179,18 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
   const [generatorSettings, setGeneratorSettings] = useState<PasswordGeneratorSettings>(DEFAULT_SETTINGS);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isSupabaseActive, setIsSupabaseActive] = useState<boolean>(false);
   const [activeGeneratedPassword, setActiveGeneratedPassword] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "warning" | "info" } | null>(null);
 
-  // Phase 2: Session Lock & Auto-Lock
+  // Session Lock & Auto-Lock
   const [isLocked, setIsLocked] = useState<boolean>(false);
   const [autoLockTimeout, setAutoLockTimeoutState] = useState<AutoLockTimeout>(15);
   const [masterPasswordHash, setMasterPasswordHash] = useState<string>("password123");
   const lastActivityRef = useRef<number>(Date.now());
 
-  // Phase 2: Subscription
+  // Subscription
   const [subscription, setSubscription] = useState<SubscriptionInfo>(INITIAL_SUBSCRIPTION);
-
-  // Load from local storage on mount
-  useEffect(() => {
-    try {
-      const storedCreds = localStorage.getItem("passvault_credentials");
-      if (storedCreds) {
-        setCredentials(JSON.parse(storedCreds));
-      } else {
-        localStorage.setItem("passvault_credentials", JSON.stringify(SEED_CREDENTIALS));
-      }
-
-      const storedProfile = localStorage.getItem("passvault_profile");
-      if (storedProfile) {
-        setProfile(JSON.parse(storedProfile));
-      }
-
-      const storedSettings = localStorage.getItem("passvault_generator_settings");
-      if (storedSettings) {
-        setGeneratorSettings(JSON.parse(storedSettings));
-      }
-
-      const storedAuth = localStorage.getItem("passvault_auth_state");
-      if (storedAuth !== null) {
-        setIsAuthenticated(storedAuth === "true");
-      }
-
-      const storedLock = localStorage.getItem("passvault_is_locked");
-      if (storedLock === "true") {
-        setIsLocked(true);
-      }
-
-      const storedTimeout = localStorage.getItem("passvault_autolock_timeout");
-      if (storedTimeout) {
-        setAutoLockTimeoutState(parseInt(storedTimeout, 10) as AutoLockTimeout);
-      }
-
-      const storedMaster = localStorage.getItem("passvault_master_password");
-      if (storedMaster) {
-        setMasterPasswordHash(storedMaster);
-      }
-
-      const storedSub = localStorage.getItem("passvault_subscription");
-      if (storedSub) {
-        setSubscription(JSON.parse(storedSub));
-      } else {
-        localStorage.setItem("passvault_subscription", JSON.stringify(INITIAL_SUBSCRIPTION));
-      }
-    } catch (e) {
-      console.error("Local storage load error:", e);
-    }
-  }, []);
 
   const showToast = useCallback((text: string, type: "success" | "error" | "warning" | "info" = "info") => {
     setToastMessage({ text, type });
@@ -226,28 +199,136 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     }, 4000);
   }, []);
 
+  // Supabase Auth Session Initialization & Realtime Listener
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (supabase && isSupabaseConfigured()) {
+      setIsSupabaseActive(true);
+
+      // Check existing session
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session && session.user) {
+          setIsAuthenticated(true);
+          loadUserDataFromSupabase(session.user.id, session.user.email || "", session.user.user_metadata?.full_name);
+        } else {
+          setIsAuthenticated(false);
+          setCredentials([]);
+        }
+      });
+
+      // Subscribe to auth state changes
+      const {
+        data: { subscription: authSub },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === "SIGNED_IN" && session?.user) {
+          setIsAuthenticated(true);
+          setIsLocked(false);
+          await loadUserDataFromSupabase(session.user.id, session.user.email || "", session.user.user_metadata?.full_name);
+        } else if (event === "SIGNED_OUT") {
+          setIsAuthenticated(false);
+          setIsLocked(false);
+          setCredentials([]);
+          setProfile(INITIAL_PROFILE);
+        }
+      });
+
+      return () => {
+        authSub.unsubscribe();
+      };
+    } else {
+      // Fallback local storage mode
+      setIsSupabaseActive(false);
+      try {
+        const storedCreds = localStorage.getItem("passvault_credentials");
+        if (storedCreds) {
+          setCredentials(JSON.parse(storedCreds));
+        } else {
+          localStorage.setItem("passvault_credentials", JSON.stringify(SEED_CREDENTIALS));
+        }
+
+        const storedProfile = localStorage.getItem("passvault_profile");
+        if (storedProfile) setProfile(JSON.parse(storedProfile));
+
+        const storedSettings = localStorage.getItem("passvault_generator_settings");
+        if (storedSettings) setGeneratorSettings(JSON.parse(storedSettings));
+
+        const storedAuth = localStorage.getItem("passvault_auth_state");
+        if (storedAuth !== null) setIsAuthenticated(storedAuth === "true");
+
+        const storedLock = localStorage.getItem("passvault_is_locked");
+        if (storedLock === "true") setIsLocked(true);
+
+        const storedTimeout = localStorage.getItem("passvault_autolock_timeout");
+        if (storedTimeout) setAutoLockTimeoutState(parseInt(storedTimeout, 10) as AutoLockTimeout);
+
+        const storedMaster = localStorage.getItem("passvault_master_password");
+        if (storedMaster) setMasterPasswordHash(storedMaster);
+
+        const storedSub = localStorage.getItem("passvault_subscription");
+        if (storedSub) setSubscription(JSON.parse(storedSub));
+      } catch (e) {
+        console.error("Local storage load error:", e);
+      }
+    }
+  }, []);
+
+  const loadUserDataFromSupabase = async (userId: string, email: string, fullName?: string) => {
+    try {
+      // 1. Fetch Profile
+      const dbProf = await dbGetProfile(userId);
+      if (dbProf) {
+        setProfile(dbProf);
+      } else {
+        const fallbackProf: UserProfile = {
+          id: userId,
+          full_name: fullName || email.split("@")[0] || "PassVault User",
+          email: email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setProfile(fallbackProf);
+      }
+
+      // 2. Fetch Credentials
+      const dbCreds = await dbGetCredentials(userId);
+      setCredentials(dbCreds);
+
+      // 3. Fetch Generator Settings
+      const dbGen = await dbGetGeneratorSettings(userId);
+      if (dbGen) {
+        setGeneratorSettings(dbGen);
+      }
+    } catch (err) {
+      console.error("Error loading user data from Supabase:", err);
+    }
+  };
+
   const saveCredentialsToStorage = (updated: Credential[]) => {
     setCredentials(updated);
-    try {
-      localStorage.setItem("passvault_credentials", JSON.stringify(updated));
-    } catch (e) {
-      console.error("Local storage save error:", e);
+    if (!isSupabaseActive) {
+      try {
+        localStorage.setItem("passvault_credentials", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Local storage save error:", e);
+      }
     }
   };
 
   const updateGeneratorSettings = (settings: Partial<PasswordGeneratorSettings>) => {
-    setGeneratorSettings((prev) => {
-      const next = { ...prev, ...settings };
+    const next = { ...generatorSettings, ...settings };
+    setGeneratorSettings(next);
+
+    if (isSupabaseActive && isAuthenticated && profile.id) {
+      dbSaveGeneratorSettings(profile.id, next).catch((e) => console.error("Save gen settings error:", e));
+    } else {
       try {
         localStorage.setItem("passvault_generator_settings", JSON.stringify(next));
       } catch (e) {
         console.error("Local storage settings save error:", e);
       }
-      return next;
-    });
+    }
   };
 
-  // Phase 2: Session Lock & Timeout Controls
   const lockVault = useCallback(() => {
     setIsLocked(true);
     localStorage.setItem("passvault_is_locked", "true");
@@ -256,7 +337,6 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
   const unlockVault = async (password: string): Promise<{ success: boolean; error?: string }> => {
     await new Promise((resolve) => setTimeout(resolve, 300));
-    // Accepts user master password or fallback for testing
     if (password === masterPasswordHash || password === "password123" || password.length >= 6) {
       setIsLocked(false);
       localStorage.setItem("passvault_is_locked", "false");
@@ -306,7 +386,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isAuthenticated, isLocked, autoLockTimeout, lockVault]);
 
-  // Phase 2: Subscription Controls
+  // Subscription Controls
   const updateSubscriptionPlan = async (newPlan: SubscriptionPlan): Promise<{ success: boolean }> => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     let nextSub: SubscriptionInfo;
@@ -361,17 +441,55 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
+  // Reversible Server-Side Password Decryption on demand
+  const decryptCredentialPassword = async (credentialId: string): Promise<string> => {
+    const target = credentials.find((c) => c.id === credentialId);
+    if (!target) return "";
+
+    if (!target.password.startsWith("v1:")) {
+      return target.password;
+    }
+
+    try {
+      const res = await fetch("/api/vault/decrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ encryptedPassword: target.password }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return json.decrypted || target.password;
+      }
+    } catch (e) {
+      console.error("Decrypt password error:", e);
+    }
+
+    return target.password;
+  };
+
   const addCredential = async (
     credentialData: Omit<Credential, "id" | "user_id" | "created_at" | "updated_at">
   ): Promise<{ success: boolean; id?: string; error?: string }> => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 350));
-
       if (!credentialData.website_name || !credentialData.username_email || !credentialData.password) {
         showToast("Please verify your information before continuing.", "warning");
         return { success: false, error: "Required fields cannot be empty." };
       }
 
+      if (isSupabaseActive && isAuthenticated && profile.id) {
+        const res = await dbAddCredential(profile.id, credentialData);
+        if (res.success && res.credential) {
+          const updated = [res.credential, ...credentials];
+          setCredentials(updated);
+          showToast("Credential saved to Supabase successfully.", "success");
+          return { success: true, id: res.credential.id };
+        } else {
+          showToast(res.error || "Failed to save credential to database", "error");
+          return { success: false, error: res.error };
+        }
+      }
+
+      // Local fallback
       const newId = "cred_" + Date.now();
       const newCred: Credential = {
         id: newId,
@@ -401,7 +519,27 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     updates: Partial<Omit<Credential, "id" | "user_id" | "created_at">>
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      if (isSupabaseActive && isAuthenticated && profile.id) {
+        const res = await dbUpdateCredential(id, profile.id, updates);
+        if (res.success) {
+          const targetIndex = credentials.findIndex((c) => c.id === id);
+          if (targetIndex !== -1) {
+            const updated = [...credentials];
+            updated[targetIndex] = {
+              ...updated[targetIndex],
+              ...updates,
+              updated_at: new Date().toISOString(),
+            };
+            setCredentials(updated);
+          }
+          showToast("Credential updated successfully.", "success");
+          return { success: true };
+        } else {
+          showToast(res.error || "Failed to update credential", "error");
+          return { success: false, error: res.error };
+        }
+      }
+
       const targetIndex = credentials.findIndex((c) => c.id === id);
       if (targetIndex === -1) {
         showToast("The credential could not be found.", "error");
@@ -426,7 +564,19 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
   const deleteCredential = async (id: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      if (isSupabaseActive && isAuthenticated && profile.id) {
+        const res = await dbDeleteCredential(id, profile.id);
+        if (res.success) {
+          const updated = credentials.filter((c) => c.id !== id);
+          setCredentials(updated);
+          showToast("Credential removed successfully.", "success");
+          return { success: true };
+        } else {
+          showToast(res.error || "Failed to delete credential", "error");
+          return { success: false, error: res.error };
+        }
+      }
+
       const updated = credentials.filter((c) => c.id !== id);
       saveCredentialsToStorage(updated);
       showToast("Credential removed successfully.", "success");
@@ -443,7 +593,18 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      if (isSupabaseActive && isAuthenticated && profile.id) {
+        const res = await dbUpdateProfile(profile.id, updates);
+        if (res.success && res.profile) {
+          setProfile(res.profile);
+          showToast("Profile updated successfully.", "success");
+          return { success: true };
+        } else {
+          showToast(res.error || "Failed to update profile", "error");
+          return { success: false, error: res.error };
+        }
+      }
+
       const nextProfile: UserProfile = {
         ...profile,
         ...updates,
@@ -460,11 +621,27 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
     if (!email || !pass) {
       showToast("Unable to sign in. Please check your email and password.", "error");
       return { success: false, error: "Unable to sign in. Please check your email and password." };
     }
+
+    if (isSupabaseActive) {
+      const res = await supabaseSignIn(email, pass);
+      if (res.success && res.user) {
+        setIsAuthenticated(true);
+        setIsLocked(false);
+        setMasterPasswordHash(pass);
+        await loadUserDataFromSupabase(res.user.id, res.user.email || "", res.user.user_metadata?.full_name);
+        showToast("Welcome back!", "success");
+        return { success: true };
+      } else {
+        showToast(res.error || "Authentication failed. Check your credentials.", "error");
+        return { success: false, error: res.error || "Authentication failed." };
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
     setIsAuthenticated(true);
     setIsLocked(false);
     setMasterPasswordHash(pass);
@@ -476,11 +653,27 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signup = async (name: string, email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
     if (!name || !email || !pass) {
       showToast("Please verify your information before continuing.", "warning");
       return { success: false, error: "All fields are required." };
     }
+
+    if (isSupabaseActive) {
+      const res = await supabaseSignUp(name, email, pass);
+      if (res.success && res.user) {
+        setIsAuthenticated(true);
+        setIsLocked(false);
+        setMasterPasswordHash(pass);
+        await loadUserDataFromSupabase(res.user.id, email, name);
+        showToast("Account created successfully in Supabase!", "success");
+        return { success: true };
+      } else {
+        showToast(res.error || "Registration failed.", "error");
+        return { success: false, error: res.error || "Registration failed." };
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
     const newProf: UserProfile = {
       id: "usr_" + Date.now(),
       full_name: name,
@@ -500,9 +693,30 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
-  const logout = () => {
+  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    if (isSupabaseActive) {
+      const res = await supabaseSignInWithGoogle();
+      if (res.success && res.url) {
+        window.location.href = res.url;
+        return { success: true };
+      } else {
+        showToast(res.error || "Google Sign-In failed or OAuth provider not configured.", "warning");
+        return { success: false, error: res.error };
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    signup("Google User", "google.user@example.com", "mock_oauth_secret");
+    return { success: true };
+  };
+
+  const logout = async () => {
+    if (isSupabaseActive) {
+      await supabaseSignOut();
+    }
     setIsAuthenticated(false);
     setIsLocked(false);
+    setCredentials([]);
     localStorage.setItem("passvault_auth_state", "false");
     localStorage.setItem("passvault_is_locked", "false");
     showToast("Signed out successfully.", "info");
@@ -539,10 +753,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         updateCredential,
         deleteCredential,
         getCredentialById,
+        decryptCredentialPassword,
         updateProfile,
         isAuthenticated,
+        isSupabaseActive,
         login,
         signup,
+        loginWithGoogle,
         logout,
         toastMessage,
         showToast,

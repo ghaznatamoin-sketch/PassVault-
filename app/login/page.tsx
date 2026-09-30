@@ -13,7 +13,7 @@ import { Alert } from "@/components/ui/Alert";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useVault();
+  const { login, loginWithGoogle } = useVault();
 
   const [email, setEmail] = useState("alex.mercer@example.com");
   const [password, setPassword] = useState("password123");
@@ -40,13 +40,15 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      login("google.user@example.com", "mock_oauth_secret");
+    const res = await loginWithGoogle();
+    setIsLoading(false);
+    if (res.success) {
       router.push("/dashboard");
-    }, 600);
+    } else if (res.error) {
+      setError(res.error);
+    }
   };
 
   return (
