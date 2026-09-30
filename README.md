@@ -1,97 +1,119 @@
 # PassVault — Secure Password Manager
 
-A secure, intuitive, and modern web application to safely store, search, copy, generate, and manage website and application login credentials in one central vault.
+A complete, full-stack, and secure web application to safely store, search, generate, and manage website and application login credentials in one centralized vault.
 
 ---
 
-## 🎯 Phase 4 Status: MVP TECHNICAL SPECIFICATION COMPLETE
+## 📌 Problem
 
-In Phase 4, we implemented and verified the complete **MVP Planning & Technical Specification**, strictly focusing on the core web application journey:
-`Create Account → Login → Save Credential → Search Credential → View/Copy Password → Generate Strong Password`
-
----
-
-## 🚀 Key MVP Features
-
-### 1. 🔐 Password Vault (CRUD)
-- **Add Credential (`/vault/new`):** Validated form storing Website/App Name, Website URL, Category (*Social, Work, Shopping, Finance, Education, Other*), Username/Email, Password (manual or generated), and Optional Notes.
-- **View Saved Credentials (`/vault`):** Responsive grid & card views with masked passwords by default.
-- **Credential Details (`/vault/[id]`):** Dedicated view with full account details, timestamps, and notes.
-- **Edit Credential (`/vault/[id]/edit`):** In-place updates refreshing `updated_at`.
-- **Delete Credential:** Confirmation modal matching MVP specification (*"Delete this saved credential?"*).
-- **Search & Filter:** Real-time query matching by website name, URL, and username/email, with 6 category filter tabs.
-
-### 2. 👁️ Password Visibility & Copy
-- **Hidden by default** across all vault cards, search results, and detail screens.
-- **Show/Hide Toggle:** Instant eye toggle with monospace font formatting.
-- **One-Click Copy:** Instant clipboard copy with visual "Copied" feedback.
-
-### 3. 🎲 Cryptographic Password Generator (`/generator`)
-- Built using cryptographically secure random number generator (`window.crypto.getRandomValues`), strictly avoiding `Math.random`.
-- Configurable length slider (6 to 48 characters) and toggles for Uppercase, Lowercase, Numbers, and Symbols.
-- Real-time password entropy & strength evaluation meter.
-- **"Use Password" Integration:** Seamlessly passes generated passwords directly into the Add Credential form (`/vault/new`).
-
-### 4. 🔑 Authentication & Access
-- **Registration (`/signup`):** Full Name, Email, Password, and Password Confirmation validation.
-- **Login (`/login`):** Email & Password authentication with error handling, plus Google OAuth CTA.
-- **Email Verification (`/verify-email`):** Account verification feedback and resend flow.
-- **Forgot Password (`/forgot-password`):** Email reset link submission flow.
-- **Reset Password (`/reset-password`):** Master password update with validation requirements.
-- **Secure Logout:** Ends session and redirects to `/login`.
-- **Protected Pages:** Enforces route protection on all internal vault screens.
-
-### 5. 🗄️ Database Schema & Architecture (`supabase/schema.sql`)
-- **Profiles Table:** `id (uuid PK)`, `user_id (uuid FK -> auth.users)`, `full_name`, `email`, `created_at`, `updated_at`.
-- **Credentials Table:** `id (uuid PK)`, `user_id (uuid FK -> auth.users)`, `website_name`, `website_url`, `category`, `username_email`, `encrypted_password`, `notes`, `created_at`, `updated_at`.
-- **Password Generator Settings Table:** `id (uuid PK)`, `user_id (uuid FK -> auth.users)`, `password_length`, `uppercase_enabled`, `lowercase_enabled`, `numbers_enabled`, `symbols_enabled`, `created_at`, `updated_at`.
-- **Row Level Security (RLS):** Policies enforcing `auth.uid() = user_id` for `SELECT`, `INSERT`, `UPDATE`, and `DELETE` on all user tables.
+People manage dozens of login credentials across websites, work services, e-commerce, banking, education, and social platforms. Remembering every password leads to password reuse, weak passwords, mix-ups, forgotten accounts, or storing credentials in insecure places like unencrypted text notes.
 
 ---
 
-## 🛠️ The 16 MVP Screens
+## 💡 Solution
 
-| Screen | Route | Description |
-|---|---|---|
-| 1. Landing / Home | `/` | Product overview, problem statement, target users, and CTA |
-| 2. Sign Up | `/signup` | User account registration |
-| 3. Login | `/login` | User authentication sign in |
-| 4. Email Verification | `/verify-email` | Account verification screen |
-| 5. Forgot Password | `/forgot-password` | Password recovery link request |
-| 6. Reset Password | `/reset-password` | Master password reset screen |
-| 7. Dashboard | `/dashboard` | Metrics, recent accounts, and quick actions |
-| 8. Password Vault | `/vault` | Full vault with real-time search & 6 category filters |
-| 9. Add New Credential | `/vault/new` | Credential creation form |
-| 10. Credential Details | `/vault/[id]` | Full credential information & copy tools |
-| 11. Edit Credential | `/vault/[id]/edit` | In-place credential edit form |
-| 12. Password Generator | `/generator` | CSPRNG password generator |
-| 13. Search Results | `/search` | Dedicated search results view |
-| 14. Profile / Account Settings | `/profile` | Profile name and email management |
-| 15. Security Settings | `/settings` | Master password change & session controls |
-| 16. Logout / Session Handling | `/login` | Secure session termination & redirection |
+**PassVault** provides a unified, secure web vault where users can manage login credentials with end-to-end user isolation, server-side cryptographic protection (AES-256-GCM), real-time search, category organization, and cryptographically secure password generation.
 
 ---
 
-## 🚫 Features Postponed from MVP (Per MVP Spec §5 & §8)
-- **Browser Extension:** Postponed to Version 2.
-- **Automatic Password Detection & Auto-Save:** Postponed to Version 2.
-- **Autofill:** Postponed to Version 2.
-- **AI Password Assistant:** Postponed to Version 2.
-- **Subscription & Payment System:** Postponed to Version 2.
-- **Advanced Security Reports:** Postponed to Version 2.
+## ✨ Implemented Features
+
+* **🔐 User Authentication:** Email & password registration with client validation, login, password recovery, master password reset, and secure logout.
+* **🌐 Google Sign-In:** Built-in OAuth sign-in flow powered by Supabase Authentication.
+* **🗄️ Password Vault CRUD:** Full lifecycle management (Add, View Details, Edit, and Delete with confirmation modal) for login credentials.
+* **🏷️ Category Organization:** 6 dedicated category tabs (*Social, Work, Shopping, Finance, Education, Other*) plus *All* filter.
+* **🔍 Real-Time Search:** Multi-attribute fuzzy search querying website name, URL, username/email, and notes.
+* **👁️ Masked Passwords & Show/Hide:** All passwords masked by default (`••••••••`) with one-click decrypted reveal.
+* **📋 1-Click Clipboard Copy:** Instant clipboard copy with visual checkmark feedback and automatic timeout reset.
+* **🎲 CSPRNG Password Generator:** Cryptographically secure random password generation (`window.crypto.getRandomValues`) with customizable length slider (6–48 chars), character toggles, real-time entropy evaluation, and direct insertion into credential forms.
+* **🛡️ Protected User Data & RLS:** Strict PostgreSQL Row Level Security (RLS) policies enforcing `auth.uid() = user_id` across all database tables.
+* **🔒 Reversible AES-256-GCM Encryption:** Passwords are encrypted on the server before database storage, ensuring zero plaintext passwords in PostgreSQL.
+* **📱 Responsive Design:** Tailored layouts for Desktop, Tablet, and Mobile with Midnight Black (`#070A10`) and Electric Blue (`#2563EB`) design system.
 
 ---
 
-## 💻 Local Development Setup
+## 🛠️ Technology Stack
 
+| Layer | Technology |
+|---|---|
+| **Frontend Framework** | [Next.js 16](https://nextjs.org/) (App Router, Server Actions & Route Handlers) |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) (Strict type-checking) |
+| **Styling & Design System** | [Tailwind CSS](https://tailwindcss.com/) & Plus Jakarta Sans typography |
+| **Backend & Database** | [Supabase](https://supabase.com/) & [PostgreSQL](https://www.postgresql.org/) |
+| **Authentication** | Supabase Auth (Email/Password & OAuth) |
+| **Security & Authorization** | PostgreSQL Row Level Security (RLS) & WebCrypto / Node.js AES-256-GCM |
+| **Icons** | [Lucide React](https://lucide.dev/) |
+| **Deployment** | [Vercel](https://vercel.com/) |
+| **Version Control** | [GitHub](https://github.com/) |
+
+---
+
+## 🗃️ Database Schema & Architecture
+
+Implemented in `supabase/schema.sql`:
+
+1. **`public.profiles`**: Stores user identity linked 1:1 with `auth.users(id)`.
+2. **`public.credentials`**: Stores user credentials linked 1:N with `auth.users(id)` including `category` and `encrypted_password`.
+3. **`public.password_generator_settings`**: Stores per-user generator preferences linked 1:1 with `auth.users(id)`.
+4. **Row Level Security Policies:** Enabled on all 3 tables with strict `auth.uid() = user_id` isolation.
+
+---
+
+## ⚙️ Installation & Local Setup
+
+### 1. Prerequisites
+* Node.js 18+ installed
+* Git installed
+
+### 2. Clone the Repository
 ```bash
-# 1. Install dependencies
-npm install
+git clone https://github.com/your-username/passvault.git
+cd passvault
+```
 
-# 2. Run development server
+### 3. Install Dependencies
+```bash
+npm install
+```
+
+### 4. Configure Environment Variables
+Create a `.env.local` file in the project root:
+
+```env
+# Public Supabase credentials
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Server-only master encryption secret (Never expose to client or Git)
+ENCRYPTION_KEY=your-32-byte-hex-or-base64-secret-key-here
+```
+
+### 5. Run the Application
+```bash
+# Run development server
 npm run dev
 
-# 3. Build & run production server
+# Or build and run production server
 npm run build
 npm run start
 ```
+
+Access the application in your browser at `http://localhost:3000`.
+
+---
+
+## 📸 Screenshots
+
+> Screenshots will be added after final testing.
+
+---
+
+## 🚀 Future Improvements (Post-MVP Roadmap)
+
+The following capabilities are planned for upcoming releases:
+* **Browser Extension:** Chrome & Firefox extension package for login autofill.
+* **Automatic Password Detection & Auto-Save:** In-browser modal prompt when new accounts are created.
+* **Autofill:** One-click credential autofill on supported web login forms.
+* **Subscription & Payment System:** Tiered plans and billing management.
+* **Advanced Security & Breach Reports:** HaveIBeenPwned API integration for breach alerts.
+* **AI Password Assistant:** Intelligent password health recommendations.
