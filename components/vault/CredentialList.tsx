@@ -65,14 +65,14 @@ export function CredentialList({
     );
   }
 
-  // 2. Empty Search State
+  // 2. Empty Search State (File 5 §14: "No saved accounts found.")
   if (searchQuery && credentials.length === 0) {
     return (
       <div className="text-center py-14 px-4 rounded-2xl bg-charcoal-900/40 border border-charcoal-800/80 max-w-lg mx-auto">
         <div className="w-12 h-12 mx-auto rounded-2xl bg-charcoal-800 text-slate-400 flex items-center justify-center mb-3">
           <Search className="w-6 h-6" />
         </div>
-        <h3 className="text-base font-semibold text-white">No results found</h3>
+        <h3 className="text-base font-semibold text-white">No saved accounts found.</h3>
         <p className="text-sm text-slate-400 mt-1 mb-4">
           No credentials found for your search.
         </p>
