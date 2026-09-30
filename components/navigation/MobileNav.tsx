@@ -15,6 +15,9 @@ import {
   User,
   Settings,
   LogOut,
+  Puzzle,
+  CreditCard,
+  Lock,
 } from "lucide-react";
 import { useVault } from "@/lib/vault-context";
 import { cn } from "@/lib/utils";
@@ -23,13 +26,15 @@ export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { profile, logout } = useVault();
+  const { profile, logout, lockVault, subscription } = useVault();
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Password Vault", href: "/vault", icon: FolderLock },
     { label: "Add Credential", href: "/vault/new", icon: PlusCircle },
     { label: "Password Generator", href: "/generator", icon: Wand2 },
+    { label: "Browser Extension", href: "/extension", icon: Puzzle },
+    { label: "Subscription & Plans", href: "/subscription", icon: CreditCard },
     { label: "Search Results", href: "/search", icon: Search },
     { label: "Profile", href: "/profile", icon: User },
     { label: "Security Settings", href: "/settings", icon: Settings },
@@ -39,6 +44,11 @@ export function MobileNav() {
     logout();
     setIsOpen(false);
     router.push("/login");
+  };
+
+  const handleLock = () => {
+    setIsOpen(false);
+    lockVault();
   };
 
   return (
@@ -53,13 +63,22 @@ export function MobileNav() {
             Pass<span className="text-electric-400">Vault</span>
           </span>
         </Link>
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 text-slate-300 hover:text-white rounded-lg hover:bg-charcoal-800 transition-colors"
-          aria-label="Toggle navigation"
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={lockVault}
+            className="p-2 text-slate-300 hover:text-amber-400 rounded-lg hover:bg-charcoal-800 transition-colors"
+            aria-label="Lock Vault"
+          >
+            <Lock className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 text-slate-300 hover:text-white rounded-lg hover:bg-charcoal-800 transition-colors"
+            aria-label="Toggle navigation"
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
@@ -101,13 +120,22 @@ export function MobileNav() {
                 <p className="text-xs text-slate-400 truncate">{profile.email}</p>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 font-semibold text-sm transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Log Out</span>
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleLock}
+                className="flex items-center justify-center space-x-2 py-3 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 font-semibold text-sm transition-colors"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Lock Vault</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center space-x-2 py-3 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 font-semibold text-sm transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

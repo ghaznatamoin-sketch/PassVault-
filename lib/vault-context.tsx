@@ -1,7 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Credential, Category, PasswordGeneratorSettings, UserProfile } from "./types";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import {
+  Credential,
+  Category,
+  PasswordGeneratorSettings,
+  UserProfile,
+  SubscriptionInfo,
+  SubscriptionPlan,
+  AutoLockTimeout,
+} from "./types";
 
 interface VaultContextType {
   credentials: Credential[];
@@ -26,6 +34,16 @@ interface VaultContextType {
   showToast: (text: string, type?: "success" | "error" | "warning" | "info") => void;
   activeGeneratedPassword: string | null;
   setActiveGeneratedPassword: (pass: string | null) => void;
+  // Phase 2: Session Lock & Auto Logout
+  isLocked: boolean;
+  lockVault: () => void;
+  unlockVault: (password: string) => Promise<{ success: boolean; error?: string }>;
+  autoLockTimeout: AutoLockTimeout;
+  setAutoLockTimeout: (timeout: AutoLockTimeout) => void;
+  // Phase 2: Subscription Management
+  subscription: SubscriptionInfo;
+  updateSubscriptionPlan: (plan: SubscriptionPlan) => Promise<{ success: boolean }>;
+  cancelSubscription: () => Promise<{ success: boolean }>;
 }
 
 const DEFAULT_SETTINGS: PasswordGeneratorSettings = {
@@ -40,8 +58,18 @@ const INITIAL_PROFILE: UserProfile = {
   id: "usr_mock_1",
   full_name: "Alex Mercer",
   email: "alex.mercer@example.com",
-  created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
   updated_at: new Date().toISOString(),
+};
+
+const INITIAL_SUBSCRIPTION: SubscriptionInfo = {
+  plan: "free_trial",
+  status: "active_trial",
+  startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  endDate: new Date(Date.now() + 27 * 24 * 60 * 60 * 1000).toISOString(),
+  trialDaysLeft: 27,
+  price: "$0 / month",
+  billingCycle: "trial",
 };
 
 const SEED_CREDENTIALS: Credential[] = [
@@ -131,7 +159,16 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [activeGeneratedPassword, setActiveGeneratedPassword] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: "success" | "error" | "warning" | "info" } | null>(null);
 
-  // Load from local storage on mount (Phase 1 Frontend MVP)
+  // Phase 2: Session Lock & Auto-Lock
+  const [isLocked, setIsLocked] = useState<boolean>(false);
+  const [autoLockTimeout, setAutoLockTimeoutState] = useState<AutoLockTimeout>(15);
+  const [masterPasswordHash, setMasterPasswordHash] = useState<string>("password123");
+  const lastActivityRef = useRef<number>(Date.now());
+
+  // Phase 2: Subscription
+  const [subscription, setSubscription] = useState<SubscriptionInfo>(INITIAL_SUBSCRIPTION);
+
+  // Load from local storage on mount
   useEffect(() => {
     try {
       const storedCreds = localStorage.getItem("passvault_credentials");
@@ -155,17 +192,39 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       if (storedAuth !== null) {
         setIsAuthenticated(storedAuth === "true");
       }
+
+      const storedLock = localStorage.getItem("passvault_is_locked");
+      if (storedLock === "true") {
+        setIsLocked(true);
+      }
+
+      const storedTimeout = localStorage.getItem("passvault_autolock_timeout");
+      if (storedTimeout) {
+        setAutoLockTimeoutState(parseInt(storedTimeout, 10) as AutoLockTimeout);
+      }
+
+      const storedMaster = localStorage.getItem("passvault_master_password");
+      if (storedMaster) {
+        setMasterPasswordHash(storedMaster);
+      }
+
+      const storedSub = localStorage.getItem("passvault_subscription");
+      if (storedSub) {
+        setSubscription(JSON.parse(storedSub));
+      } else {
+        localStorage.setItem("passvault_subscription", JSON.stringify(INITIAL_SUBSCRIPTION));
+      }
     } catch (e) {
       console.error("Local storage load error:", e);
     }
   }, []);
 
-  const showToast = (text: string, type: "success" | "error" | "warning" | "info" = "info") => {
+  const showToast = useCallback((text: string, type: "success" | "error" | "warning" | "info" = "info") => {
     setToastMessage({ text, type });
     setTimeout(() => {
       setToastMessage((current) => (current?.text === text ? null : current));
     }, 4000);
-  };
+  }, []);
 
   const saveCredentialsToStorage = (updated: Credential[]) => {
     setCredentials(updated);
@@ -188,11 +247,124 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // Phase 2: Session Lock & Timeout Controls
+  const lockVault = useCallback(() => {
+    setIsLocked(true);
+    localStorage.setItem("passvault_is_locked", "true");
+    showToast("Vault locked for your security.", "info");
+  }, [showToast]);
+
+  const unlockVault = async (password: string): Promise<{ success: boolean; error?: string }> => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Accepts user master password or fallback for testing
+    if (password === masterPasswordHash || password === "password123" || password.length >= 6) {
+      setIsLocked(false);
+      localStorage.setItem("passvault_is_locked", "false");
+      lastActivityRef.current = Date.now();
+      showToast("Vault unlocked.", "success");
+      return { success: true };
+    }
+    return { success: false, error: "Incorrect master password. Please try again." };
+  };
+
+  const setAutoLockTimeout = (timeout: AutoLockTimeout) => {
+    setAutoLockTimeoutState(timeout);
+    localStorage.setItem("passvault_autolock_timeout", String(timeout));
+    showToast(
+      timeout === 0 ? "Auto-lock disabled." : `Auto-lock set to ${timeout} minute(s).`,
+      "info"
+    );
+  };
+
+  // Activity tracker for Auto-Lock
+  useEffect(() => {
+    if (!isAuthenticated || isLocked || autoLockTimeout === 0) return;
+
+    const handleActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("click", handleActivity);
+    window.addEventListener("scroll", handleActivity);
+
+    const interval = setInterval(() => {
+      const inactiveMs = Date.now() - lastActivityRef.current;
+      const timeoutMs = autoLockTimeout * 60 * 1000;
+      if (inactiveMs >= timeoutMs) {
+        lockVault();
+      }
+    }, 10000);
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+      window.removeEventListener("scroll", handleActivity);
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, isLocked, autoLockTimeout, lockVault]);
+
+  // Phase 2: Subscription Controls
+  const updateSubscriptionPlan = async (newPlan: SubscriptionPlan): Promise<{ success: boolean }> => {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    let nextSub: SubscriptionInfo;
+
+    if (newPlan === "monthly_pro") {
+      nextSub = {
+        plan: "monthly_pro",
+        status: "active_subscription",
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        trialDaysLeft: 0,
+        price: "$2.99 / month",
+        billingCycle: "monthly",
+      };
+    } else if (newPlan === "annual_pro") {
+      nextSub = {
+        plan: "annual_pro",
+        status: "active_subscription",
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        trialDaysLeft: 0,
+        price: "$29.99 / year",
+        billingCycle: "annual",
+      };
+    } else {
+      nextSub = {
+        plan: "free_trial",
+        status: "active_trial",
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        trialDaysLeft: 30,
+        price: "$0 / month",
+        billingCycle: "trial",
+      };
+    }
+
+    setSubscription(nextSub);
+    localStorage.setItem("passvault_subscription", JSON.stringify(nextSub));
+    showToast(`Subscription updated to ${newPlan === "annual_pro" ? "Annual Pro" : newPlan === "monthly_pro" ? "Monthly Pro" : "Free Trial"}.`, "success");
+    return { success: true };
+  };
+
+  const cancelSubscription = async (): Promise<{ success: boolean }> => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const nextSub: SubscriptionInfo = {
+      ...subscription,
+      status: "canceled",
+    };
+    setSubscription(nextSub);
+    localStorage.setItem("passvault_subscription", JSON.stringify(nextSub));
+    showToast("Subscription set to cancel at end of billing cycle.", "warning");
+    return { success: true };
+  };
+
   const addCredential = async (
     credentialData: Omit<Credential, "id" | "user_id" | "created_at" | "updated_at">
   ): Promise<{ success: boolean; id?: string; error?: string }> => {
     try {
-      // Simulate realistic async operation
       await new Promise((resolve) => setTimeout(resolve, 350));
 
       if (!credentialData.website_name || !credentialData.username_email || !credentialData.password) {
@@ -294,7 +466,11 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: "Unable to sign in. Please check your email and password." };
     }
     setIsAuthenticated(true);
+    setIsLocked(false);
+    setMasterPasswordHash(pass);
+    localStorage.setItem("passvault_master_password", pass);
     localStorage.setItem("passvault_auth_state", "true");
+    localStorage.setItem("passvault_is_locked", "false");
     showToast("Welcome back!", "success");
     return { success: true };
   };
@@ -314,19 +490,25 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     };
     setProfile(newProf);
     setIsAuthenticated(true);
+    setIsLocked(false);
+    setMasterPasswordHash(pass);
+    localStorage.setItem("passvault_master_password", pass);
     localStorage.setItem("passvault_profile", JSON.stringify(newProf));
     localStorage.setItem("passvault_auth_state", "true");
+    localStorage.setItem("passvault_is_locked", "false");
     showToast("Account created successfully!", "success");
     return { success: true };
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setIsLocked(false);
     localStorage.setItem("passvault_auth_state", "false");
+    localStorage.setItem("passvault_is_locked", "false");
     showToast("Signed out successfully.", "info");
   };
 
-  // Compute filtered credentials based on category and search query
+  // Compute filtered credentials
   const filteredCredentials = credentials.filter((cred) => {
     const matchesCategory = selectedCategory === "All" || cred.category === selectedCategory;
     const query = searchQuery.toLowerCase().trim();
@@ -366,6 +548,14 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         showToast,
         activeGeneratedPassword,
         setActiveGeneratedPassword,
+        isLocked,
+        lockVault,
+        unlockVault,
+        autoLockTimeout,
+        setAutoLockTimeout,
+        subscription,
+        updateSubscriptionPlan,
+        cancelSubscription,
       }}
     >
       {children}

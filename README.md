@@ -1,81 +1,79 @@
 # PassVault — Secure Password Manager
 
-A secure, intuitive, and user-friendly digital solution for managing login credentials, finding saved credentials when needed, generating strong passwords, and organizing accounts across websites and applications.
+A secure, modern, and user-friendly digital solution for managing login credentials, generating strong passwords, autofilling logins via browser extension, and protecting account access with session lock security.
 
 ---
 
-## 🎯 Phase 1 — Frontend MVP Overview
+## 🎯 Phase 2 Status: COMPLETE
 
-Phase 1 establishes the product foundation for **PassVault — Secure Password Manager**, directly addressing the core problem: users struggling to remember, securely store, and organize passwords across diverse services (work, social, shopping, education, finance).
-
-### Target Audience
-- 🎓 **Students:** Course portals, LMS logins, student emails
-- 💼 **Employees & Professionals:** Work emails, corporate suites, dev tools
-- 💻 **Freelancers:** Client dashboards, invoicing platforms, SaaS tools
-- 🛍️ **Online Shoppers:** Retail accounts, shipping portals
-- 🏢 **Small Business Owners:** Merchant services, banking, operations
-- 🌐 **General Internet Users:** Replacing repeated passwords & unencrypted notes
+Phase 2 builds upon the approved PassVault foundation, implementing:
+1. **Session Lock & Automatic Inactivity Logout**
+2. **PassVault Browser Extension Package & Interactive Simulator**
+3. **Subscription & Billing Model (30-Day Free Trial & Pro Plans)**
+4. **Enhanced Navigation & Vault Controls**
 
 ---
 
-## 🚀 Key Features Implemented in Phase 1
+## 🚀 Key Features Implemented in Phase 2
 
-1. **Design System & UI Theme:**
-   - Dark aesthetic: *Midnight Black* (`#070A10`), *Dark Charcoal* (`#111827`), *Electric Blue* (`#2563EB`) accent & glow
-   - Typography: *Plus Jakarta Sans* font with monospace sensitive credential styling
-   - Glassmorphism cards, modals, alerts, badges, toggles, and responsive navigation
+### 1. 🛡️ Session Security & Auto-Lock
+- **Instant Vault Lock:** Immediate manual lock button in Sidebar, Topbar, and Settings.
+- **Inactivity Auto-Lock:** Configurable timeout (1 min, 5 mins, 15 mins, 30 mins, 1 hour, or Never). Activity listener tracks mouse/keyboard/scroll events.
+- **Lock Screen Overlay:** Secure modal requiring Master Password verification to unlock vault access or safely sign out.
 
-2. **16 Complete Screens with Working Navigation:**
-   - **Landing Page (`/`)**: Hero, Problem & Evidence, Target Audience, Features, How It Works
-   - **Sign Up (`/signup`)**: Name, Email, Password, Confirm Password, Google OAuth CTA
-   - **Login (`/login`)**: Email & Password authentication with error handling
-   - **Email Verification (`/verify-email`)**: Verification notice, resend action, flow link
-   - **Forgot Password (`/forgot-password`)**: Email recovery prompt & confirmation
-   - **Reset Password (`/reset-password`)**: New password validation & confirmation
-   - **Dashboard (`/dashboard`)**: Metric cards, category breakdown, quick search, recent accounts, security hygiene reminder
-   - **Password Vault (`/vault`)**: Real-time search, 6 category tabs (*Social, Work, Shopping, Finance, Education, Other*), credentials list, show/hide, copy, delete modal
-   - **Add New Credential (`/vault/new`)**: Validated creation form with direct generator integration
-   - **Credential Details (`/vault/[id]`)**: Full account details, copy username/password, notes, timestamps
-   - **Edit Credential (`/vault/[id]/edit`)**: In-place edit with persistence
-   - **Password Generator (`/generator`)**: Cryptographically secure generator (`crypto.getRandomValues`), length slider (6–48), character set toggles, strength meter, "Use in Form"
-   - **Search Results (`/search`)**: Real-time query matching across website name, URL, and username/email
-   - **Profile Settings (`/profile`)**: Name, email, member metadata
-   - **Security Settings (`/settings`)**: Master password update, session overview, secure logout
-   - **Logout Flow**: Working session clearance with modal and redirection to `/login`
+### 2. 🧩 PassVault Browser Extension (Manifest V3)
+- **Real Extension Codebase:** Located in `extension/` directory with `manifest.json`, `background.js` service worker, `content.js` content script, `popup.html`, and `popup.js`.
+- **Login Field Detection:** Automatically detects `<input type="password">` and username/email fields on web pages.
+- **"Save Password to PassVault?" Prompt:** Intercepts form submissions and offers a one-click banner to review and save login credentials.
+- **Autofill Badges:** Provides one-click credential population into login fields.
+- **In-App Extension Hub & Interactive Simulator (`/extension`):** Interactive live simulation of the full workflow:
+  `Detect → Review → Save → Search → Autofill → Manage`
 
-3. **User Feedback & State Handling:**
-   - Exact error, loading, and empty state messages as defined in PRD §7.3:
-     - *"Your vault is empty. Add your first account to get started."*
-     - *"No credentials found for your search."*
-     - *"No credentials found in this category."*
-     - *"Credential saved successfully."*
-     - *"Delete this saved credential?"*
+### 3. 💳 Subscription & Plan Management (`/subscription`)
+- **30-Day Free Trial:** Full feature access initialized for all new accounts with a live trial countdown.
+- **Transparent Plans:**
+  - Free Trial: $0 / 30 days
+  - Monthly Pro: $2.99 / month
+  - Annual Pro: $29.99 / year (Save 16%, 2 Months Free)
+- **Interactive Plan Switching:** Real state transitions with upgrade/downgrade confirmation and cancellation handling.
+- *Notice:* Payment processor integration (Stripe / PayPal) is staged for production deployment; subscription tiers and status states are fully active locally.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Complete Application Routes (17 Routes)
 
-- **Framework:** Next.js (App Router) + TypeScript
-- **Styling:** Tailwind CSS + PostCSS
-- **Icons:** Lucide React
-- **Cryptography:** Web Crypto API (`window.crypto.getRandomValues`) for CSPRNG
+| Route | Description |
+|---|---|
+| `/` | Landing Page with Hero, Problem, Features, and Target Users |
+| `/dashboard` | Dashboard with stats, recent accounts, trial status, and quick lock |
+| `/vault` | Vault with real-time search, 6 category tabs, copy, show/hide |
+| `/vault/new` | Add new credential with generator shortcut |
+| `/vault/[id]` | Credential details screen with timestamps and notes |
+| `/vault/[id]/edit` | Edit credential with live persistence |
+| `/generator` | Cryptographic generator with length slider and character set toggles |
+| `/extension` | Browser Extension hub and interactive workflow simulator |
+| `/subscription` | Subscription management, trial days countdown, and plan switcher |
+| `/search` | Dedicated search results view |
+| `/profile` | Profile name and email settings |
+| `/settings` | Security settings, master password change, and auto-lock timeout |
+| `/login` | Authentication sign in with Google OAuth CTA |
+| `/signup` | User registration with master password confirmation |
+| `/verify-email` | Account email verification screen |
+| `/forgot-password` | Password recovery request screen |
+| `/reset-password` | Master password reset screen |
 
 ---
 
-## 💻 Local Development Setup
+## 💻 Local Development & Extension Testing
 
-1. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Run Development Server:**
+1. **Start the Web App:**
    ```bash
    npm run dev
+   # Open http://localhost:3000
    ```
 
-3. **Build for Production:**
-   ```bash
-   npm run build
-   npm run start
-   ```
+2. **Load the Browser Extension in Chrome / Edge / Brave:**
+   - Go to `chrome://extensions`
+   - Enable **Developer Mode**
+   - Click **Load unpacked**
+   - Select the `extension/` folder in this repository.

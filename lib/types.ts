@@ -7,7 +7,7 @@ export interface Credential {
   website_url: string;
   category: Category;
   username_email: string;
-  password: string; // Stored in memory / local mock in Phase 1
+  password: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -28,6 +28,21 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
 }
+
+export type SubscriptionPlan = 'free_trial' | 'monthly_pro' | 'annual_pro';
+export type SubscriptionStatus = 'active_trial' | 'active_subscription' | 'trial_expired' | 'canceled';
+
+export interface SubscriptionInfo {
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startDate: string;
+  endDate: string;
+  trialDaysLeft: number;
+  price: string;
+  billingCycle: 'monthly' | 'annual' | 'trial';
+}
+
+export type AutoLockTimeout = 1 | 5 | 15 | 30 | 60 | 0; // 0 = Never
 
 export interface AuthSession {
   user: {

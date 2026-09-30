@@ -15,6 +15,10 @@ import {
   ShoppingBag,
   Building2,
   Globe,
+  Puzzle,
+  Sparkles,
+  CreditCard,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -60,9 +64,9 @@ export default function LandingPage() {
       icon: FolderLock,
     },
     {
-      title: "Fast Real-Time Search",
-      description: "Instantly find credentials by website name, domain, or username/email as you type without digging through notes.",
-      icon: Search,
+      title: "PassVault Browser Extension",
+      description: "Automatically detect login forms on visited sites, prompt to save on submit, and autofill credentials in Chrome, Edge & Firefox.",
+      icon: Puzzle,
     },
     {
       title: "Cryptographic Generator",
@@ -70,9 +74,9 @@ export default function LandingPage() {
       icon: Wand2,
     },
     {
-      title: "One-Click Safe Copy",
-      description: "Keep passwords masked by default. Copy credentials to your clipboard with immediate visual confirmation.",
-      icon: KeyRound,
+      title: "Vault Auto-Lock & Session Security",
+      description: "Configurable inactivity auto-lock and manual instant lock to protect your credentials from unauthorized physical access.",
+      icon: Lock,
     },
   ];
 
@@ -97,9 +101,13 @@ export default function LandingPage() {
 
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
             <a href="#features" className="hover:text-electric-400 transition-colors">Features</a>
+            <Link href="/extension" className="hover:text-electric-400 transition-colors flex items-center gap-1">
+              <span>Extension</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-electric-600/30 text-electric-300 font-bold">New</span>
+            </Link>
+            <Link href="/subscription" className="hover:text-electric-400 transition-colors">Pricing</Link>
             <a href="#problem" className="hover:text-electric-400 transition-colors">The Problem</a>
             <a href="#target-users" className="hover:text-electric-400 transition-colors">For Who</a>
-            <a href="#how-it-works" className="hover:text-electric-400 transition-colors">How It Works</a>
           </nav>
 
           <div className="flex items-center space-x-3">
@@ -110,7 +118,7 @@ export default function LandingPage() {
             </Link>
             <Link href="/signup">
               <Button variant="primary" size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
-                Get Started
+                Start Free Trial
               </Button>
             </Link>
           </div>
@@ -119,13 +127,12 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-24 md:pt-28 md:pb-32">
-        {/* Subtle Background Glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-electric-600/15 blur-[120px] rounded-full pointer-events-none" />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center relative z-10 space-y-8">
           <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-charcoal-900/90 border border-electric-500/30 text-xs font-semibold text-electric-400 shadow-glow-sm">
-            <Shield className="w-3.5 h-3.5 text-electric-400" />
-            <span>PassVault Phase 1 — Secure Password Foundation</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>PassVault Phase 2 — 30-Day Free Trial & Browser Extension</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
@@ -136,13 +143,13 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            The average user manages over 100 online accounts. PassVault provides a clean, user-friendly digital solution to store, find, and generate strong passwords in one protected place.
+            The average user manages over 100 online accounts. PassVault provides a clean, user-friendly digital solution to store, find, and generate strong passwords in one protected place — with full browser extension autofill.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/signup" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto px-8" rightIcon={<ArrowRight className="w-5 h-5" />}>
-                Get Started Free
+                Start 30-Day Free Trial
               </Button>
             </Link>
             <Link href="/dashboard" className="w-full sm:w-auto">
@@ -155,16 +162,16 @@ export default function LandingPage() {
           {/* Quick Metrics */}
           <div className="pt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-charcoal-800/80">
             <div>
-              <p className="text-2xl font-bold text-white">100%</p>
-              <p className="text-xs text-slate-400 mt-0.5">Masked by Default</p>
+              <p className="text-2xl font-bold text-white">30 Days</p>
+              <p className="text-xs text-slate-400 mt-0.5">Free Full Trial</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-electric-400">Zero</p>
-              <p className="text-xs text-slate-400 mt-0.5">Plaintext Display</p>
+              <p className="text-2xl font-bold text-electric-400">Autofill</p>
+              <p className="text-xs text-slate-400 mt-0.5">Browser Extension</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">6 Types</p>
-              <p className="text-xs text-slate-400 mt-0.5">Category Filters</p>
+              <p className="text-2xl font-bold text-amber-400">Auto-Lock</p>
+              <p className="text-xs text-slate-400 mt-0.5">Session Security</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-emerald-400">CSPRNG</p>
@@ -288,7 +295,7 @@ export default function LandingPage() {
               Simple Workflow
             </h2>
             <p className="text-3xl font-bold text-white">
-              Save → Search → View/Copy → Generate → Manage
+              Detect → Review → Save → Search → Autofill → Manage
             </p>
           </div>
 
@@ -297,9 +304,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 mx-auto rounded-2xl bg-charcoal-800 border border-charcoal-700 flex items-center justify-center font-bold text-electric-400 text-lg">
                 1
               </div>
-              <h4 className="font-semibold text-white">Add Your Account</h4>
+              <h4 className="font-semibold text-white">Detect & Save</h4>
               <p className="text-xs text-slate-400">
-                Input your website details or let PassVault generate a strong random password.
+                Input credentials or let the extension detect login forms automatically on submission.
               </p>
             </div>
 
@@ -317,9 +324,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 mx-auto rounded-2xl bg-charcoal-800 border border-charcoal-700 flex items-center justify-center font-bold text-electric-400 text-lg">
                 3
               </div>
-              <h4 className="font-semibold text-white">Copy & Login</h4>
+              <h4 className="font-semibold text-white">Autofill & Lock</h4>
               <p className="text-xs text-slate-400">
-                One-click copy sends credentials to your clipboard with immediate confirmation.
+                One-click autofill enters logins instantly, while auto-lock protects your vault.
               </p>
             </div>
           </div>
@@ -346,8 +353,11 @@ export default function LandingPage() {
             <Link href="/login" className="text-xs text-slate-400 hover:text-white transition-colors">
               Sign In
             </Link>
+            <Link href="/subscription" className="text-xs text-slate-400 hover:text-white transition-colors">
+              Pricing & Plans
+            </Link>
             <Link href="/signup" className="text-xs text-electric-400 hover:text-electric-300 font-semibold transition-colors">
-              Create Account
+              Start Free Trial
             </Link>
           </div>
         </div>
