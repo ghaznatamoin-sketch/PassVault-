@@ -57,6 +57,11 @@ Implemented in `supabase/schema.sql`:
 3. **`public.password_generator_settings`**: Stores per-user generator preferences linked 1:1 with `auth.users(id)`.
 4. **Row Level Security Policies:** Enabled on all 3 tables with strict `auth.uid() = user_id` isolation.
 
+## 🌐 Live Production URL
+
+* **Public Live Web Application:** [https://passvault-omega.vercel.app](https://passvault-omega.vercel.app)
+* **GitHub Repository:** [https://github.com/ghaznatamoin-sketch/PassVault-](https://github.com/ghaznatamoin-sketch/PassVault-)
+
 ---
 
 ## ⚙️ Installation & Local Setup
